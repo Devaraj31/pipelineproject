@@ -1,0 +1,7 @@
+---
+  - name: Install Jenkins on Jenkins-Master
+    hosts: Jenkins-Master
+    become: yes
+    tasks:
+	    - name: Install Java and Jenkins
+	      script : jenkins.sh

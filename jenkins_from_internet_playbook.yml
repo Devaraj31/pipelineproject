@@ -1,0 +1,69 @@
+---
+  - name: Install Jenkins on Jenkins-Master
+    hosts: Jenkins-Master
+    become: yes
+    vars:
+      jenkins_repo_url: "https://pkg.jenkins.io/debian/"
+
+    tasks:
+	  - name: Update apt cache
+        apt:
+          update_cache: yes
+		  
+	  - name: Install required dependencies
+	    apt:
+		  name:
+		    - apt-transport-https
+			- ca-certificates
+			- curl
+			- lsb-release
+		  state: present
+		  
+	  - name: Add Jenkins repository key
+	    apt_key:
+		  url: "{{ jenkins_repo_url }}keys/jenkins.io.key"
+		  state: present
+		  
+	  - name: Add Jenkins APT repository
+	    apt_repository:
+		repo: "deb {{ jenkins_repo_url }} stable/ubuntu"
+		state: present
+		
+	  - name: Install Java
+	    apt:
+		  name: openjdk-17-jdk
+		  state: present
+		  
+	  - name: Install Jenkins
+	    apt:
+		  name: jenkins
+		  state: present
+		  
+	  - name: Start Jenkins service
+	    service:
+		  name: jenkins
+		  state: started
+		  enabled: yes
+	  
+	  - name: Install UFW if not already installed
+	    apt:
+		  name: ufw
+		  state: present
+		  
+	  - name: Open firewall for Jenkins
+	    ufw:
+		  rule: allow
+		  name: 'Jenkins'
+		  state: enabled
+		  port: '8080'
+		  proto: tcp
+		  direction: in
+		  
+	  - name: Print Jenkins status
+	    command: systemctl status jenkins
+		register: jenkins_status
+		failed_when: false
+		
+      - name: Display Jenkins status
+	    debug:
+		  var: jenkins_status.stdout
